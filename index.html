@@ -281,13 +281,28 @@ function drawOverlay() {
 
   var s = '';
 
-  s += '<defs><mask id="fogmask">';
+  s += '<defs>';
+  s += '<radialGradient id="clear"><stop offset="0%" stop-color="#000"/>' +
+       '<stop offset="55%" stop-color="#000" stop-opacity="0.92"/>' +
+       '<stop offset="100%" stop-color="#000" stop-opacity="0"/></radialGradient>';
+  s += '<radialGradient id="dim"><stop offset="0%" stop-color="#000" stop-opacity="0.75"/>' +
+       '<stop offset="60%" stop-color="#000" stop-opacity="0.4"/>' +
+       '<stop offset="100%" stop-color="#000" stop-opacity="0"/></radialGradient>';
+  s += '<mask id="fogmask">';
   s += '<rect x="0" y="0" width="1000" height="' + H + '" fill="#fff"/>';
   for (var i = 0; i < S.reached && i < spots.length; i++) {
-    s += '<circle cx="' + X(spots[i]) + '" cy="' + Y(spots[i]) + '" r="' + (H * 0.22).toFixed(0) + '" fill="#000"/>';
+    var age = (S.reached - 1) - i;
+    var rr = (H * (age === 0 ? 0.42 : age <= 2 ? 0.34 : 0.26)).toFixed(0);
+    s += '<circle cx="' + X(spots[i]) + '" cy="' + Y(spots[i]) + '" r="' + rr +
+         '" fill="url(#clear)"/>';
+  }
+  if (S.reached < spots.length) {
+    var nx = spots[S.reached];
+    s += '<circle cx="' + X(nx) + '" cy="' + Y(nx) + '" r="' + (H * 0.30).toFixed(0) +
+         '" fill="url(#dim)"/>';
   }
   s += '</mask></defs>';
-  s += '<rect x="0" y="0" width="1000" height="' + H + '" fill="#050A14" opacity="0.6" mask="url(#fogmask)"/>';
+  s += '<rect x="0" y="0" width="1000" height="' + H + '" fill="#050A14" opacity="0.9" mask="url(#fogmask)"/>';
 
   var d = '';
   for (var j = 0; j < spots.length; j++) d += (j ? ' L' : 'M') + X(spots[j]) + ' ' + Y(spots[j]);
