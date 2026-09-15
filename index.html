@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ゆめクエスト</title>
+<style>
+:root{
+  --sea:#DCEAF7; --ink:#2C2C2A; --sub:#5F5E5A; --mute:#888780;
+  --line:#D3D1C7; --card:#FFFFFF; --bg:#F7F5EF; --accent:#185FA5;
+  --accentbg:#E6F1FB; --done:#EAF3DE; --donefg:#3B6D11;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  background:var(--bg);color:var(--ink);font-size:15px;line-height:1.6;
+  padding-bottom:env(safe-area-inset-bottom)}
+header{padding:12px 16px 8px;display:flex;align-items:center;gap:10px}
+header h1{font-size:17px;font-weight:600;margin:0;flex:1}
+.lv{font-size:13px;color:var(--sub)}
+.tabs{display:flex;gap:6px;padding:0 16px 10px}
+.tabs button{flex:1;padding:8px 0;font-size:13px;border:.5px solid var(--line);
+  background:var(--card);border-radius:8px;color:var(--sub);font-family:inherit}
+.tabs button.on{background:var(--accentbg);border-color:var(--accent);color:var(--accent);font-weight:600}
+main{padding:0 16px 40px}
+.panel{display:none}
+.panel.on{display:block}
+.card{background:var(--card);border:.5px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.dreams{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;-webkit-overflow-scrolling:touch}
+.dreams button{white-space:nowrap;padding:7px 13px;font-size:13px;border:.5px solid var(--line);
+  background:var(--card);border-radius:999px;color:var(--sub);font-family:inherit}
+.dreams button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.legend{display:flex;gap:12px;font-size:11px;color:var(--mute);padding:6px 2px 10px;flex-wrap:wrap}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+h2{font-size:14px;font-weight:600;margin:0 0 8px}
+.rowline{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.rowline .nm{font-size:12px;color:var(--sub);width:44px;flex:none}
+.bar{flex:1;height:9px;background:var(--bg);border-radius:5px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent)}
+.rowline .vl{font-size:11px;color:var(--mute);width:52px;text-align:right;flex:none}
+.months{display:flex;gap:2px}
+.months>i{flex:1;height:20px;border-radius:3px;border:.5px dashed var(--line);background:var(--bg)}
+.months>i.half{background:var(--donefg);opacity:.35;border-style:solid;border-color:transparent}
+.months>i.full{background:var(--donefg);opacity:.85;border-style:solid;border-color:transparent}
+.months>i.now{background:var(--accentbg);border:1px solid var(--accent);border-style:solid}
+.mlabel{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);margin-top:6px;padding-left:52px}
+.quest{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:.5px solid var(--line)}
+.quest:first-of-type{border-top:none}
+.quest .tg{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);flex:none}
+.quest.done .tg{background:var(--donefg);border-color:var(--donefg)}
+.quest .tx{flex:1;font-size:14px}
+.quest.done .tx{color:var(--mute);text-decoration:line-through}
+.quest .xp{font-size:12px;color:var(--mute);flex:none}
+.quest.explore .xp{color:var(--accent);font-weight:600}
+.note{font-size:12px;color:var(--mute);margin:4px 2px 12px;line-height:1.7}
+.pick{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px}
+.pick button{white-space:nowrap;padding:6px 12px;font-size:12px;border:.5px solid var(--line);
+  background:var(--card);border-radius:8px;color:var(--sub);font-family:inherit}
+.pick button.on{background:var(--accentbg);border-color:var(--accent);color:var(--accent);font-weight:600}
+.kv{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-top:.5px solid var(--line)}
+.kv:first-child{border-top:none}
+.kv b{font-weight:600}
+svg{display:block;width:100%;height:auto}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ゆめクエスト</h1>
+  <span class="lv" id="totalLv">Lv.0</span>
+</header>
+
+<div class="tabs">
+  <button data-tab="world" class="on">ワールド</button>
+  <button data-tab="land">大陸</button>
+  <button data-tab="today">きょう</button>
+</div>
+
+<main>
+
+<section class="panel on" id="p-world">
+  <div class="dreams" id="dreamBar"></div>
+  <div class="card" style="padding:8px">
+    <svg id="map" viewBox="0 0 380 560" role="img" aria-label="ワールドマップ"></svg>
+  </div>
+  <div class="legend">
+    <span><i style="background:#3B6D11"></i>クリア</span>
+    <span><i style="background:#185FA5"></i>いま</span>
+    <span><i style="background:#B4B2A9"></i>これから</span>
+    <span><i style="background:#D85A30"></i>ゆめへの道</span>
+  </div>
+  <div class="card" id="dreamInfo"></div>
+</section>
+
+<section class="panel" id="p-land">
+  <div class="pick" id="landPick"></div>
+  <div class="card" id="landBody"></div>
+</section>
+
+<section class="panel" id="p-today">
+  <div class="card">
+    <h2>ステータス</h2>
+    <div id="stats"></div>
+  </div>
+  <div class="card">
+    <h2>きょうのクエスト</h2>
+    <div id="quests"></div>
+  </div>
+  <p class="note">日課はチェックだけ。探索は大陸の町をひとつ進めます。</p>
+</section>
+
+</main>
+
+<script>
+/* ============================================================
+   ゆめクエスト v0.1
+   単一HTML / ビルド不要 / 保存は Store 経由（後で Firestore に差し替え）
+   ============================================================ */
+
+/* ---------- 保存レイヤー ---------- */
+var Store = (function () {
+  var mem = {};
+  var ok = false;
+  try { localStorage.setItem('__t', '1'); localStorage.removeItem('__t'); ok = true; } catch (e) { ok = false; }
+  return {
+    get: function (k, d) {
+      try { var v = ok ? localStorage.getItem(k) : mem[k];
+            return v == null ? d : JSON.parse(v); } catch (e) { return d; }
+    },
+    set: function (k, v) {
+      var s = JSON.stringify(v);
+      try { if (ok) localStorage.setItem(k, s); else mem[k] = s; } catch (e) { mem[k] = s; }
+    }
+  };
+})();
+
+/* ---------- 定数 ---------- */
+var STATS = [
+  { id: 'think', name: '思考力' },
+  { id: 'calc',  name: '計算力' },
+  { id: 'read',  name: '読解力' },
+  { id: 'write', name: '記述力' },
+  { id: 'find',  name: '調べる力' }
+];
+
+/* 大陸＝教科。start は開始学年（1..12 / 小1=1, 中1=7, 高1=10） */
+var LANDS = [
+  { id: 'math', name: '算数', terrain: '岩山', color: '#C3BCA8', dark: '#6B6450', start: 1, stats: ['calc', 'think'] },
+  { id: 'jp',   name: '国語', terrain: '森',   color: '#A9C98C', dark: '#3B6D11', start: 1, stats: ['read', 'write'] },
+  { id: 'sci',  name: '理科', terrain: '火山', color: '#D9A08C', dark: '#8A4632', start: 3, stats: ['think', 'find'] },
+  { id: 'soc',  name: '社会', terrain: '草原', color: '#E2C98A', dark: '#854F0B', start: 3, stats: ['find', 'read'] },
+  { id: 'eng',  name: '英語', terrain: '島',   color: '#8FC6C0', dark: '#0F6E56', start: 3, stats: ['read', 'write'] }
+];
+
+/* 町（ステージ）。学年ごとに2つ。小1〜小3は実際の単元名、以降は仮名 */
+var TOWN_NAMES = {
+  math: ['たしざんの村','ひきざんの丘','くくの洞窟','ながさの峠','わりざんの谷','しょうすうの泉',
+         '分数の砦','小数の岬','がい数の関所','面積の台地','比例の橋','速さの岩壁',
+         '正負の門','方程式の塔','関数の峰','図形の証明所','確率の窟','展開の稜線',
+         '二次関数の壁','三角比の頂','微分の淵','積分の渓','数列の道','ベクトルの果て'],
+  jp:  ['ひらがなの林','かたかなの泉','かん字の森','せつめい文の道','ことわざの里','だん落の谷',
+        '要約の丘','慣用句の窪','敬語の館','物語の湖','詩の岸','論説の坂',
+        '古文の社','文法の径','漢文の門','随筆の庭','評論の丘','短歌の沢',
+        '現代文の塔','古典文法の閣','和歌の峠','小説読解の森','論述の台','記述の頂'],
+  sci: ['こん虫の原','じしゃくの泉','電気の丘','月と星の丘','水よう液の池','てこの坂',
+        '燃焼の火口','人体の洞','大地の断層','電流の道','化学変化の窯','天体の展望',
+        'イオンの湖','運動の坂','遺伝の林','生態系の谷','力学の峰','波の浜',
+        '電磁気の丘','有機化学の窯','細胞の森','地球史の層','原子の核','反応速度の泉'],
+  soc: ['町たんけん','地図記号の道','くらしの丘','水と電気の里','日本の地形','農業の平野',
+        '工業の港','歴史のはじまり','戦国の城','江戸の町','明治の道','憲法の丘',
+        '世界地理の関','近代史の峠','国際社会の港','経済の市','政治の館','人権の丘',
+        '公民の広場','世界史の壁','日本史の塔','地政の岬','法の門','国際関係の灯台'],
+  eng: ['アルファベットの浜','あいさつの入江','たんごの島','かんたん文の砂州','しつもんの礁','じこしょうかいの港',
+        '一般動詞の島','過去形の岩','複数形の瀬','三単現の灯台','助動詞の岬','前置詞の砂丘',
+        '不定詞の渡り','比較の橋','受動態の潮','分詞の島','関係代名詞の門','仮定法の霧島',
+        '長文の海峡','時制の群島','構文の岩礁','語法の砂洲','英作文の入江','リスニングの岬']
+};
+
+var GRADE_LABEL = ['小1','小2','小3','小4','小5','小6','中1','中2','中3','高1','高2','高3'];
+
+/* 夢。need = その大陸を何学年まで必要とするか（1..12） */
+var DREAMS = [
+  { id: 'soccer', name: 'サッカー選手', need: { math: 6,  jp: 9,  sci: 6,  soc: 6,  eng: 9  } },
+  { id: 'doctor', name: 'お医者さん',   need: { math: 12, jp: 12, sci: 12, soc: 9,  eng: 12 } },
+  { id: 'pilot',  name: 'パイロット',   need: { math: 12, jp: 9,  sci: 12, soc: 9,  eng: 12 } },
+  { id: 'game',   name: 'ゲームを作る', need: { math: 12, jp: 9,  sci: 10, soc: 6,  eng: 10 } },
+  { id: 'cook',   name: 'りょうり人',   need: { math: 6,  jp: 9,  sci: 9,  soc: 9,  eng: 6  } },
+  { id: 'vet',    name: 'じゅうい',     need: { math: 10, jp: 12, sci: 12, soc: 9,  eng: 10 } },
+  { id: 'teach',  name: '先生',         need: { math: 10, jp: 12, sci: 10, soc: 12, eng: 10 } },
+  { id: 'build',  name: '建築家',       need: { math: 12, jp: 9,  sci: 12, soc: 10, eng: 9  } }
+];
+
+/* ---------- 状態 ---------- */
+var S = Store.get('yq.state', null) || {
+  grade: 2,          /* 現在の学年 1..12 */
+  month: 9,          /* 現在の月 1..12（学年は4月始まり） */
+  dream: 'soccer',
+  cleared: {},       /* townId -> 0..100 の習熟度 */
+  exp: { think: 0, calc: 0, read: 0, write: 0, find: 0 },
+  daily: {},         /* 'YYYY-MM-DD' -> [済みクエストid] */
+  land: 'math'
+};
+
+function save() { Store.set('yq.state', S); }
+
+/* ---------- 町の生成 ---------- */
+function towns(landId) {
+  var land = landById(landId), out = [], i;
+  for (i = 0; i < 24; i++) {
+    var g = Math.floor(i / 2) + 1;
+    if (g < land.start) continue;
+    out.push({
+      id: landId + '-' + i,
+      land: landId,
+      grade: g,
+      half: i % 2,                       /* 0 = 前期, 1 = 後期 */
+      name: TOWN_NAMES[landId][i] || (GRADE_LABEL[g - 1] + 'のまち')
+    });
+  }
+  return out;
+}
+
+function landById(id) {
+  for (var i = 0; i < LANDS.length; i++) if (LANDS[i].id === id) return LANDS[i];
+  return LANDS[0];
+}
+
+/* 学校進度：現学年の経過した半期までは自動で50% */
+function schoolLevel(t) {
+  if (t.grade < S.grade) return 50;
+  if (t.grade > S.grade) return 0;
+  var passed = S.month >= 4 ? (S.month - 4) : (S.month + 8);  /* 4月=0 */
+  return t.half === 0 ? 50 : (passed >= 5 ? 50 : 0);
+}
+
+function mastery(t) {
+  return Math.max(schoolLevel(t), S.cleared[t.id] || 0);
+}
+
+function isCurrent(t) {
+  return t.grade === S.grade && mastery(t) > 0 && mastery(t) < 100;
+}
+
+/* ---------- レベル ---------- */
+function levelOf(id) { return Math.floor((S.exp[id] || 0) / 20); }
+function totalLevel() {
+  var n = 0; for (var i = 0; i < STATS.length; i++) n += levelOf(STATS[i].id); return n;
+}
+function nextIn(id) { return 20 - ((S.exp[id] || 0) % 20); }
+
+/* ---------- 共通度 ---------- */
+function commonality(landId, grade) {
+  var n = 0;
+  for (var i = 0; i < DREAMS.length; i++) if (DREAMS[i].need[landId] >= grade) n++;
+  return n;
+}
+
+/* ---------- ワールドマップ描画 ---------- */
+function drawMap() {
+  var W = 380, H = 560, colW = 62, gap = 10;
+  var x0 = (W - (LANDS.length * colW + (LANDS.length - 1) * gap)) / 2;
+  var top = 70, bottom = 520, rowH = (bottom - top) / 12;
+  var dream = DREAMS.filter(function (d) { return d.id === S.dream; })[0];
+  var s = '<rect x="0" y="0" width="380" height="560" fill="#DCEAF7"/>';
+
+  function yOf(g) { return bottom - (g - 0.5) * rowH; }
+
+  for (var i = 0; i < LANDS.length; i++) {
+    var L = LANDS[i], x = x0 + i * (colW + gap);
+    var ts = towns(L.id);
+    var yTop = yOf(12) - rowH / 2 + 4, yBot = yOf(L.start) + rowH / 2 - 4;
+    var reach = dream.need[L.id];
+    var yReach = yOf(reach) - rowH / 2;
+
+    s += '<rect x="' + x + '" y="' + yTop + '" width="' + colW + '" height="' + (yBot - yTop) +
+         '" rx="26" fill="' + L.color + '" opacity="0.30" stroke="' + L.dark +
+         '" stroke-width="0.5" stroke-dasharray="4 4"/>';
+    var yOpen = yOf(S.grade) - rowH / 2;
+    s += '<rect x="' + x + '" y="' + yOpen + '" width="' + colW + '" height="' + (yBot - yOpen) +
+         '" rx="26" fill="' + L.color + '" stroke="' + L.dark + '" stroke-width="0.5"/>';
+
+    if (reach >= L.start) {
+      s += '<line x1="' + (x + colW / 2) + '" y1="' + (yBot - 10) + '" x2="' + (x + colW / 2) +
+           '" y2="' + yReach + '" stroke="#D85A30" stroke-width="2" stroke-linecap="round" opacity="0.75"/>';
+      s += '<circle cx="' + (x + colW / 2) + '" cy="' + yReach + '" r="4.5" fill="#D85A30"/>';
+    }
+
+    for (var j = 0; j < ts.length; j++) {
+      var t = ts[j], m = mastery(t);
+      var cx = x + colW / 2 + (t.half ? 13 : -13), cy = yOf(t.grade) + (t.half ? 5 : -5);
+      var fill = m >= 100 ? '#3B6D11' : (m > 0 ? '#185FA5' : '#B4B2A9');
+      var r = m > 0 ? 4.5 : 3;
+      if (isCurrent(t)) s += '<circle cx="' + cx + '" cy="' + cy + '" r="8.5" fill="none" stroke="#185FA5" stroke-width="2"/>';
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + fill + '"/>';
+    }
+
+    s += '<text x="' + (x + colW / 2) + '" y="' + (yBot + 20) + '" text-anchor="middle" font-size="12" fill="' +
+         L.dark + '" font-weight="600">' + L.name + '</text>';
+    s += '<text x="' + (x + colW / 2) + '" y="' + (yBot + 34) + '" text-anchor="middle" font-size="10" fill="#5F5E5A">' +
+         L.terrain + '</text>';
+  }
+
+  for (var g = 1; g <= 12; g += 3) {
+    s += '<text x="8" y="' + (yOf(g) + 4) + '" font-size="10" fill="#888780">' + GRADE_LABEL[g - 1] + '</text>';
+  }
+  s += '<text x="' + (W / 2) + '" y="40" text-anchor="middle" font-size="13" fill="#444441" font-weight="600">' +
+       dream.name + 'への道</text>';
+  s += '<text x="' + (W / 2) + '" y="56" text-anchor="middle" font-size="10" fill="#888780">うえに いくほど 霧がふかい</text>';
+
+  document.getElementById('map').innerHTML = s;
+}
+
+/* ---------- 夢バー ---------- */
+function drawDreams() {
+  var s = '';
+  for (var i = 0; i < DREAMS.length; i++) {
+    s += '<button data-dream="' + DREAMS[i].id + '"' + (DREAMS[i].id === S.dream ? ' class="on"' : '') +
+         '>' + DREAMS[i].name + '</button>';
+  }
+  document.getElementById('dreamBar').innerHTML = s;
+
+  var d = DREAMS.filter(function (x) { return x.id === S.dream; })[0];
+  var info = '<h2>' + d.name + 'に ひつような 道</h2>';
+  for (var k = 0; k < LANDS.length; k++) {
+    var L = LANDS[k], need = d.need[L.id], c = commonality(L.id, need);
+    var star = c >= DREAMS.length - 1 ? '★ どの ゆめでも ひつよう' : (c + ' / ' + DREAMS.length + ' の ゆめで ひつよう');
+    info += '<div class="kv"><span>' + L.name + ' <b>' + GRADE_LABEL[need - 1] + 'まで</b></span><span style="color:#888780;font-size:12px">' + star + '</span></div>';
+  }
+  info += '<p class="note" style="margin:10px 2px 0">ゆめを かえても、あるいてきた 道は そのまま のこります。</p>';
+  document.getElementById('dreamInfo').innerHTML = info;
+}
+
+/* ---------- 大陸（中景） ---------- */
+function drawLand() {
+  var s = '';
+  for (var i = 0; i < LANDS.length; i++) {
+    s += '<button data-land="' + LANDS[i].id + '"' + (LANDS[i].id === S.land ? ' class="on"' : '') +
+         '>' + LANDS[i].name + '</button>';
+  }
+  document.getElementById('landPick').innerHTML = s;
+
+  var L = landById(S.land), ts = towns(S.land);
+  var body = '<h2>' + L.name + '・' + GRADE_LABEL[S.grade - 1] + '</h2>';
+
+  if (S.grade < L.start) {
+    body += '<p class="note">この大陸は ' + GRADE_LABEL[L.start - 1] + ' から ひらきます。</p>';
+    document.getElementById('landBody').innerHTML = body;
+    return;
+  }
+
+  var cur = ts.filter(function (t) { return t.grade === S.grade; });
+  for (var j = 0; j < cur.length; j++) {
+    var t = cur[j], m = mastery(t);
+    body += '<div class="rowline"><span class="nm" style="width:auto;flex:1">' + t.name + '</span>' +
+            '<span class="vl">' + m + '%</span></div>' +
+            '<div class="bar" style="margin:-4px 0 10px"><i style="width:' + m + '%"></i></div>';
+  }
+
+  body += '<h2 style="margin-top:14px">1年の ながれ</h2><div class="months">';
+  for (var mo = 0; mo < 12; mo++) {
+    var realMonth = mo < 9 ? mo + 4 : mo - 8;
+    var halfIdx = mo < 6 ? 0 : 1;
+    var t2 = cur[halfIdx];
+    var cls = '';
+    if (t2) {
+      var mm = mastery(t2);
+      var passed = S.month >= 4 ? (S.month - 4) : (S.month + 8);
+      if (mo < passed) cls = mm >= 100 ? 'full' : 'half';
+      else if (mo === passed) cls = 'now';
+    }
+    body += '<i class="' + cls + '"></i>';
+  }
+  body += '</div><div class="mlabel" style="padding-left:0"><span>4月</span><span>9月</span><span>3月</span></div>';
+  body += '<p class="note" style="margin:12px 2px 0">うすい色＝学校で ならったぶん（50%）。こい色＝家で しあげたぶん。</p>';
+
+  document.getElementById('landBody').innerHTML = body;
+}
+
+/* ---------- きょう（近景） ---------- */
+function todayKey() {
+  var d = new Date();
+  return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+}
+
+function todayQuests() {
+  var L = landById(S.land);
+  var ts = towns(S.land).filter(function (t) { return t.grade === S.grade && mastery(t) < 100; });
+  var target = ts[0] || null;
+  return [
+    { id: 'd1', name: 'おんどく', xp: 8,  stat: 'read',  kind: 'daily' },
+    { id: 'd2', name: 'けいさんドリル', xp: 12, stat: 'calc', kind: 'daily' },
+    target ? { id: 'e1', name: 'たんさく・' + target.name, xp: 40, stat: L.stats[0], kind: 'explore', town: target.id }
+           : { id: 'e1', name: 'たんさく・おやすみ', xp: 0, stat: L.stats[0], kind: 'explore' }
+  ];
+}
+
+function drawToday() {
+  var s = '';
+  for (var i = 0; i < STATS.length; i++) {
+    var st = STATS[i], lv = levelOf(st.id), pct = ((S.exp[st.id] || 0) % 20) / 20 * 100;
+    s += '<div class="rowline"><span class="nm">' + st.name + '</span>' +
+         '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
+         '<span class="vl">Lv.' + lv + '</span></div>';
+  }
+  document.getElementById('stats').innerHTML = s;
+
+  var done = S.daily[todayKey()] || [];
+  var qs = todayQuests(), q = '';
+  for (var j = 0; j < qs.length; j++) {
+    var it = qs[j], isDone = done.indexOf(it.id) >= 0;
+    q += '<div class="quest' + (isDone ? ' done' : '') + (it.kind === 'explore' ? ' explore' : '') +
+         '" data-q="' + it.id + '"><span class="tg"></span><span class="tx">' + it.name +
+         '</span><span class="xp">+' + it.xp + '</span></div>';
+  }
+  document.getElementById('quests').innerHTML = q;
+  document.getElementById('totalLv').textContent = 'Lv.' + totalLevel();
+}
+
+/* ---------- クエスト完了 ---------- */
+function toggleQuest(id) {
+  var key = todayKey();
+  if (!S.daily[key]) S.daily[key] = [];
+  var list = S.daily[key], at = list.indexOf(id);
+  var it = todayQuests().filter(function (x) { return x.id === id; })[0];
+  if (!it) return;
+
+  if (at >= 0) {
+    list.splice(at, 1);
+    S.exp[it.stat] = Math.max(0, (S.exp[it.stat] || 0) - it.xp);
+    if (it.town) S.cleared[it.town] = Math.max(0, (S.cleared[it.town] || 0) - 25);
+  } else {
+    list.push(id);
+    S.exp[it.stat] = (S.exp[it.stat] || 0) + it.xp;
+    if (it.town) S.cleared[it.town] = Math.min(100, Math.max(50, S.cleared[it.town] || 0) + 25);
+  }
+  save(); drawToday(); drawMap(); drawLand();
+}
+
+/* ---------- イベント ---------- */
+document.querySelector('.tabs').addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  var t = b.getAttribute('data-tab');
+  var bs = document.querySelectorAll('.tabs button');
+  for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i] === b);
+  var ps = document.querySelectorAll('.panel');
+  for (var j = 0; j < ps.length; j++) ps[j].classList.toggle('on', ps[j].id === 'p-' + t);
+});
+
+document.getElementById('dreamBar').addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  S.dream = b.getAttribute('data-dream'); save(); drawDreams(); drawMap();
+});
+
+document.getElementById('landPick').addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  S.land = b.getAttribute('data-land'); save(); drawLand(); drawToday();
+});
+
+document.getElementById('quests').addEventListener('click', function (e) {
+  var r = e.target.closest('.quest'); if (!r) return;
+  toggleQuest(r.getAttribute('data-q'));
+});
+
+/* ---------- 起動 ---------- */
+drawDreams();
+drawMap();
+drawLand();
+drawToday();
+</script>
+</body>
+</html>
